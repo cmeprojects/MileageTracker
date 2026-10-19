@@ -2,7 +2,7 @@ name: Publish app to GitHub Pages
 
 on:
   push:
-    branches: [claude/mileage-tracking-app-odl2f4, main]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
