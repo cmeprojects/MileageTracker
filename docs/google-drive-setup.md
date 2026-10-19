@@ -30,11 +30,11 @@ Do this on a computer, signed in with the Google account whose Drive you want to
 1. In the left menu open **Clients** → **Create client**.
 2. **Application type:** Web application. **Name:** `Mileage app`.
 3. Under **Authorised JavaScript origins** click **Add URI** and enter exactly:
-   `https://angelice13.github.io`
+   `https://cmeprojects.github.io`
    (no `/testing`, no slash at the end). If you move the app to a new GitHub account later, add
    that address too, e.g. `https://newname.github.io`.
 4. Under **Authorised redirect URIs** click **Add URI** and enter the app's full address, e.g.
-   `https://angelice13.github.io/testing/` (with the slash at the end). This lets
+   `https://cmeprojects.github.io/MileageTracker/` (with the slash at the end). This lets
    "Sign in another way" work if the sign-in window is blocked. Then **Create**.
 5. Copy the **Client ID**. It ends in `.apps.googleusercontent.com`.
 

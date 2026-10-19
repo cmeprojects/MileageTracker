@@ -9,10 +9,11 @@ home screen. After the first visit it works with no signal.
 
 ## Open it
 
-**https://angelice13.github.io/testing/**
+**https://cmeprojects.github.io/MileageTracker/**
 
-- **iPhone (Safari):** tap Share → *Add to Home Screen*. Always open it from
-  that icon. iPhone keeps home-screen apps' data separately from Safari.
+- **iPhone (Safari or Chrome):** tap Share → *Add to Home Screen*. Always open
+  it from that icon. iPhone keeps home-screen apps' data separately from the
+  browser.
 - **Android (Chrome):** menu ⋮ → *Install app* / *Add to Home screen*.
 
 ## Features
