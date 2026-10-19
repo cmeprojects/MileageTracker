@@ -12,6 +12,7 @@ import {
 } from './js/files.js';
 import { attachSwipe } from './js/swipe.js';
 import { GOOGLE_CLIENT_ID } from './js/config.js';
+import { DEFAULT_SERVICE, carReminders, dueReminders } from './js/reminders.js';
 import {
   downloadBackup, forgetToken, getToken, hasToken, preloadGoogle, redirectUri, signInWithRedirect, takeRedirectToken, uploadBackup,
 } from './js/gdrive.js';
@@ -35,7 +36,7 @@ const TYPE_LABEL = {
   tfn: 'Business · TFN', abn: 'Business · ABN',
 };
 
-export const APP_VERSION = '2026.10.19-1';
+export const APP_VERSION = '2026.10.20-1';
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Australia/Melbourne';
 let store;
 const state = { lastEndOdo: null, active: null, trips: [], view: 'log' };
@@ -654,6 +655,63 @@ function renderOdoCheck() {
   });
 }
 
+// ---------- service, rego and insurance reminders ----------
+function reminders() {
+  return carReminders({
+    settings: store.meta.carReminders || {},
+    expenses: store.expenses,
+    odometer: store.lastEndOdo(),
+    today: localDate(new Date(), TIME_ZONE),
+  });
+}
+
+const REMINDER_NAME = { service: 'Service', rego: 'Rego', insurance: 'Insurance' };
+
+function reminderText(r) {
+  const day = new Date(`${r.dueDate}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  if (r.kind === 'service') {
+    const byKm = r.kmLeft !== null ? (r.kmLeft < 0 ? `${num(-r.kmLeft)} km overdue` : `due in ${num(r.kmLeft)} km`) : null;
+    const byDate = r.daysLeft < 0 ? `was due ${day}` : `or by ${day}`;
+    return `Service ${[byKm, byDate].filter(Boolean).join(' ')}`;
+  }
+  return r.daysLeft < 0 ? `${REMINDER_NAME[r.kind]} was due ${day}`
+    : r.daysLeft === 0 ? `${REMINDER_NAME[r.kind]} is due today` : `${REMINDER_NAME[r.kind]} due ${day} (in ${r.daysLeft} day${r.daysLeft === 1 ? '' : 's'})`;
+}
+
+function renderCarNag() {
+  const today = localDate(new Date(), TIME_ZONE);
+  const snoozes = store.meta.carSnooze || {};
+  const due = dueReminders(reminders()).filter((r) => !(snoozes[r.kind] > today));
+  const r = due[0];
+  $('#car-nag').innerHTML = r
+    ? `<div class="warn ${r.status === 'overdue' ? 'overdue' : ''} car-nag"><span>${esc(reminderText(r))}</span>
+        <button class="link" type="button" data-car-snooze="${r.kind}">Later</button></div>`
+    : '';
+}
+
+$('#car-nag').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-car-snooze]');
+  if (!b) return;
+  const until = addDays(localDate(new Date(), TIME_ZONE), 7);
+  await store.setMeta('carSnooze', { ...(store.meta.carSnooze || {}), [b.dataset.carSnooze]: until });
+  renderCarNag();
+});
+
+function renderReminderSettings() {
+  const f = $('#car-form');
+  const set = store.meta.carReminders || {};
+  f.elements.serviceKm.value = set.serviceKm ?? '';
+  f.elements.serviceMonths.value = set.serviceMonths ?? '';
+  f.elements.regoDue.value = set.regoDue || '';
+  f.elements.insuranceDue.value = set.insuranceDue || '';
+  f.elements.serviceKm.placeholder = DEFAULT_SERVICE.km;
+  f.elements.serviceMonths.placeholder = DEFAULT_SERVICE.months;
+  const list = reminders();
+  const lines = list.map((r) => `<div>${r.status === 'ok' ? '✓' : '⚠'} ${esc(reminderText(r))}</div>`);
+  if (!list.some((r) => r.kind === 'service')) lines.push('<div>Log a <strong>Service</strong> expense with the odometer to start service reminders.</div>');
+  $('#reminder-status').innerHTML = lines.join('');
+}
+
 // ---------- ATO logbook guide ----------
 const todayLocal = () => localDate(new Date(), TIME_ZONE);
 const prettyDay = (d) => new Date(`${d}T00:00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
@@ -767,6 +825,7 @@ function renderLog() {
   renderStats();
   renderBackupNag();
   renderLogbookNag();
+  renderCarNag();
   renderOdoCheck();
   renderActive();
   if (state.active) $('#new-trip').innerHTML = '';
@@ -1130,6 +1189,7 @@ function renderReportForms() {
   const f = $('#car-form');
   for (const k of ['make', 'model', 'engine', 'rego']) f.elements[k].value = car[k] || '';
   $('#car-summary').textContent = [car.make, car.model, car.rego].filter(Boolean).join(' · ') || 'not set';
+  renderReminderSettings();
   showCreatePanel();
 
   const lb = $('#logbook-form');
@@ -1164,6 +1224,11 @@ $('#car-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
   await store.saveCar(Object.fromEntries(fd));
+  const n = (v) => (v === '' ? '' : Number(v));
+  await store.setMeta('carReminders', {
+    serviceKm: n(fd.get('serviceKm')), serviceMonths: n(fd.get('serviceMonths')),
+    regoDue: fd.get('regoDue'), insuranceDue: fd.get('insuranceDue'),
+  });
   renderReportForms();
   e.target.closest('details').open = false;
   toast('Car details saved — rebuild (↻) older reports to include them');

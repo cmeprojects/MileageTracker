@@ -1,12 +1,12 @@
 // Keeps the app working with no signal by storing every file on the phone.
 // With signal, it always asks the website for the latest files first (so updates
 // arrive straight away) and falls back to the stored copy if the network is slow or down.
-const VERSION = '2026.10.19-1';
+const VERSION = '2026.10.20-1';
 const CACHE = `mileage-${VERSION}`;
 const FILES = [
   './', 'index.html', 'styles.css', 'app.js', 'expenses-ui.js', 'manifest.webmanifest',
   'js/periods.js', 'js/logic.js', 'js/store.js', 'js/idb.js', 'js/files.js',
-  'js/expenses.js', 'js/photos.js', 'js/swipe.js', 'js/methods.js', 'js/gdrive.js', 'js/config.js',
+  'js/expenses.js', 'js/photos.js', 'js/swipe.js', 'js/methods.js', 'js/gdrive.js', 'js/config.js', 'js/fuel.js', 'js/reminders.js',
   'vendor/exceljs.min.js', 'vendor/jszip.min.js', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
 ];
 const NETWORK_TIMEOUT_MS = 4000;

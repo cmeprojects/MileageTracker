@@ -253,3 +253,48 @@ test('method comparison: logbook vs cents per km, tolls on top, 5,000 km cap', (
   });
   assert.deepEqual([inputs.carCosts, inputs.tolls, inputs.businessUse, inputs.rate], [100, 10, 40, 0.88]);
 });
+
+// ---------- fuel economy & car reminders ----------
+import { fuelSegments, fuelStats } from '../public/js/fuel.js';
+import { carReminders, dueReminders } from '../public/js/reminders.js';
+
+test('fuel: full-to-full economy, part fills, warnings', () => {
+  const f = (date, odometer, litres, amount, full = true) => ({ category: 'fuel', date, odometer, litres, amount, full_tank: full });
+  const list = [
+    f('2026-08-01', 10000, 40, 80),
+    f('2026-08-10', 10500, 40, 80), // 8.0
+    f('2026-08-20', 10800, 10, 20, false), // part fill counted in the next stretch
+    f('2026-08-25', 11000, 30, 60), // (10 + 30) / 500 = 8.0
+    f('2026-09-05', 11500, 52, 104), // 10.4 → > 25% above usual 8.0
+  ];
+  assert.deepEqual(fuelSegments(list).map((s) => s.economy), [8, 8, 10.4]);
+  const s = fuelStats(list, '2026-08-01', '2026-09-30', { kmDriven: 1500, carCosts: 600 });
+  assert.equal(s.litres, 172);
+  assert.equal(s.pricePerLitre, 2);
+  assert.equal(s.economy, 8.8); // 132 L / 1500 km
+  assert.equal(s.fuelPerKm, 0.23); // $344 / 1500
+  assert.equal(s.runningPerKm, 0.4);
+  assert.equal(s.warning, 'high');
+  const missed = fuelStats([...list, f('2026-09-20', 13500, 20, 40)], '2026-08-01', '2026-09-30');
+  assert.equal(missed.warning, 'missed');
+});
+
+test('reminders: service by km or months, rego and insurance renewals', () => {
+  const expenses = [
+    { category: 'service', date: '2026-01-10', odometer: 40000, amount: 300 },
+    { category: 'registration', date: '2025-11-15', amount: 800 },
+  ];
+  const list = carReminders({ settings: { insuranceDue: '2026-10-25' }, expenses, odometer: 49650, today: '2026-10-20' });
+  const by = Object.fromEntries(list.map((r) => [r.kind, r]));
+  assert.equal(by.service.dueKm, 50000);
+  assert.equal(by.service.kmLeft, 350);
+  assert.equal(by.service.dueDate, '2027-01-10');
+  assert.equal(by.service.status, 'soon');
+  assert.equal(by.rego.dueDate, '2026-11-15');
+  assert.equal(by.rego.status, 'soon');
+  assert.equal(by.insurance.status, 'soon');
+  assert.deepEqual(dueReminders(list).map((r) => r.kind), ['insurance', 'rego', 'service']);
+  // paying the rego pushes it a year on
+  const paid = carReminders({ expenses: [...expenses, { category: 'registration', date: '2026-11-10', amount: 820 }], odometer: 0, today: '2026-11-11' });
+  assert.equal(paid.find((r) => r.kind === 'rego').dueDate, '2027-11-10');
+});

@@ -1,10 +1,10 @@
-# Google Drive backup — one-time setup (about 10 minutes)
+# Google Drive backup setup
 
-This creates a free "client ID" that lets the Mileage Logbook ask Google for permission to save
-**its own backup file** in your Google Drive. It uses the `drive.file` permission, which means the
-app can only see files it created. It can't see anything else in your Drive. It costs nothing.
+One-off, takes about 10 minutes and costs nothing. It creates a client ID so the app can save its
+backup file to Google Drive. The app uses the `drive.file` permission, so it can only see the files
+it creates, nothing else in Drive.
 
-Do this on a computer, signed in with the Google account whose Drive you want to use.
+Easiest on a computer, signed in to the Google account whose Drive should hold the backups.
 
 ## 1. Create a project
 1. Go to **https://console.cloud.google.com/**. Accept the terms if asked.
@@ -31,27 +31,25 @@ Do this on a computer, signed in with the Google account whose Drive you want to
 2. **Application type:** Web application. **Name:** `Mileage app`.
 3. Under **Authorised JavaScript origins** click **Add URI** and enter exactly:
    `https://cmeprojects.github.io`
-   (no `/testing`, no slash at the end). If you move the app to a new GitHub account later, add
-   that address too, e.g. `https://newname.github.io`.
-4. Under **Authorised redirect URIs** click **Add URI** and enter the app's full address, e.g.
-   `https://cmeprojects.github.io/MileageTracker/` (with the slash at the end). This lets
-   "Sign in another way" work if the sign-in window is blocked. Then **Create**.
+   (no slash at the end). If the app ever moves to another address, add that one too.
+4. Under **Authorised redirect URIs** click **Add URI** and enter
+   `https://cmeprojects.github.io/MileageTracker/` (with the slash at the end). This is used by
+   "Sign in another way" when the sign-in window is blocked. Then **Create**.
 5. Copy the **Client ID**. It ends in `.apps.googleusercontent.com`.
 
 ## 5. Put it in the app
 - Open the app → **Reports** → **Backup & restore** → **Google Drive** → paste the client ID →
   **Save client ID** → **Back up to Drive now**.
-- Google shows a sign-in window. Because the app is in "Testing", you may see **"Google hasn't
-  verified this app"**. That's expected for your own private app: tap **Continue**, then allow
-  access to "files you use with this app".
+- Sign in to Google. Because the app is in "Testing", Google shows **"Google hasn't verified this
+  app"**. That's normal for a private app: tap **Continue**, then allow access.
+- On iPhone, if the sign-in window doesn't open, use **Sign in another way**.
 
-The client ID isn't a secret. You can also send it to whoever maintains the app, to build it in so
-you don't have to paste it on each device.
+The client ID isn't a secret. It can be put in `public/js/config.js` so it doesn't need pasting
+on each device.
 
 ## How backups work afterwards
-- After 10pm (or the next time you open the app), if you've signed in within the last hour, the
-  app backs up to Drive automatically. Otherwise you'll see **"Back up to Google Drive"**. Tap it
-  (one tap, you may need to pick your Google account).
+- After 10pm (or the next time the app is opened) it backs up to Drive automatically if signed in
+  within the last hour. Otherwise the reminder shows **Back up to Google Drive**, one tap.
 - The file is `My Drive / Mileage Logbook backups / mileage-backup.zip`. Each backup replaces the
   previous one, and Google Drive keeps older versions for about 30 days (right-click → Manage versions).
 - On a new phone: **Restore from Drive**.

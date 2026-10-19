@@ -5,6 +5,7 @@ import {
 import { localDate, periodContaining } from './js/periods.js';
 import { summarise, tripsInRange } from './js/logic.js';
 import { compressPhoto, photoUrl } from './js/photos.js';
+import { fuelStats } from './js/fuel.js';
 import { attachSwipe } from './js/swipe.js';
 
 const money = (n) => `$${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -104,7 +105,26 @@ export function setupExpenses({ getStore, timeZone, $, $$, esc, prefs, setPref, 
       <div class="claim-row sub"><span>ABN ${s.split.abn.pct}%</span><span>${money(s.split.abn.amount)}</span></div>
       <div class="claim-row sub"><span>TFN ${s.split.tfn.pct}%</span><span>${money(s.split.tfn.amount)}</span></div>
       ${s.nonCarTotal ? `<div class="claim-row"><span>Not car-related (not split)</span><strong>${money(s.nonCarTotal)}</strong></div>` : ''}
+      ${fuelHtml(store, start, end, s.carTotal)}
       <p class="muted small">Business use ${businessUse}% ${logbook ? '(ATO logbook)' : '(from your trips — create an ATO logbook in Reports for the real figure)'}.</p>`;
+  }
+
+  function fuelHtml(store, start, end, carCosts) {
+    const km = summarise(tripsInRange(store.trips, start, end, timeZone)).total;
+    const f = fuelStats(store.expenses, start, end, { kmDriven: km, carCosts });
+    if (!f.fuelSpent) return '';
+    const bits = [
+      f.economy ? `<strong>${f.economy}</strong> L/100 km` : null,
+      f.pricePerLitre ? `${money(f.pricePerLitre)}/L` : null,
+      f.fuelPerKm !== null ? `fuel ${money(f.fuelPerKm)}/km` : null,
+      f.runningPerKm !== null ? `running ${money(f.runningPerKm)}/km` : null,
+    ].filter(Boolean);
+    const warn = f.warning === 'high'
+      ? `<div class="warn small">Fuel use is higher than usual (${f.latest.economy} vs ${f.usual} L/100 km). Worth checking tyre pressure or whether a service is due.</div>`
+      : f.warning === 'missed'
+        ? '<div class="warn small">The last two full tanks don\'t add up — did you miss logging a fill-up, or is an odometer reading wrong?</div>'
+        : '';
+    return `<div class="fuel-line"><span class="k">Fuel</span><span>${bits.length ? bits.join(' · ') : 'add litres to see economy'}</span></div>${warn}`;
   }
 
   $('#expense-summary').addEventListener('click', (e) => {
@@ -152,7 +172,16 @@ export function setupExpenses({ getStore, timeZone, $, $$, esc, prefs, setPref, 
     $('#split-note').textContent = !category ? ''
       : car ? 'Car-related: split by your business-use % (mileage) into Personal / ABN / TFN.'
         : 'Not car-related: listed in reports with its total, not split by mileage.';
-    $('#odo-row').classList.toggle('hidden', !CATEGORY[category]?.odometer);
+    const needsOdo = Boolean(CATEGORY[category]?.odometer);
+    $('#odo-row').classList.toggle('hidden', !needsOdo);
+    // New expense: start the odometer at the current reading so there's usually nothing to type.
+    if (needsOdo && !editing && form.elements.odometer.value === '' && store.lastEndOdo() !== null) {
+      form.elements.odometer.value = store.lastEndOdo();
+    }
+    const isFuel = category === 'fuel';
+    $('#fuel-row').classList.toggle('hidden', !isFuel);
+    $('#full-tank-row').classList.toggle('hidden', !isFuel);
+    showPricePerLitre();
     const suppliers = recentSuppliers(store.expenses, category);
     paintFuelSelect(category === 'fuel' ? suppliers : null);
     $('#supplier-chips').innerHTML = category === 'fuel' ? ''
@@ -197,6 +226,14 @@ export function setupExpenses({ getStore, timeZone, $, $$, esc, prefs, setPref, 
     }
   });
 
+  function showPricePerLitre() {
+    const amount = parseFloat(form.elements.amount.value);
+    const litres = parseFloat(form.elements.litres.value);
+    $('#price-per-litre').value = amount > 0 && litres > 0 ? `$${(amount / litres).toFixed(3)}` : '';
+  }
+  form.elements.litres.addEventListener('input', showPricePerLitre);
+  form.elements.amount.addEventListener('input', showPricePerLitre);
+
   function showPhoto(url) {
     if (photo.url) URL.revokeObjectURL(photo.url);
     photo.url = url;
@@ -219,6 +256,8 @@ export function setupExpenses({ getStore, timeZone, $, $$, esc, prefs, setPref, 
     form.elements.date.value = exp?.date || localDate(new Date(), timeZone);
     form.elements.supplier.value = exp?.supplier || '';
     form.elements.odometer.value = exp?.odometer ?? '';
+    form.elements.litres.value = exp?.litres ?? '';
+    form.elements.full_tank.checked = exp ? exp.full_tank !== false : true;
     form.elements.notes.value = exp?.notes || '';
     form.elements.other_label.value = otherLabel;
     $('#expense-error').textContent = '';
@@ -292,6 +331,8 @@ export function setupExpenses({ getStore, timeZone, $, $$, esc, prefs, setPref, 
         date: form.elements.date.value,
         supplier: form.elements.supplier.value,
         odometer: CATEGORY[category]?.odometer ? form.elements.odometer.value : null,
+        litres: category === 'fuel' ? form.elements.litres.value : null,
+        full_tank: category === 'fuel' ? form.elements.full_tank.checked : null,
         notes: form.elements.notes.value,
         photo_id: photoId,
       };

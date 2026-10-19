@@ -309,6 +309,7 @@ export class Store {
     return {
       app: 'mileage-logbook', version: 2, exported_at: new Date().toISOString(),
       trips: this.trips, reports: this.reports, expenses: this.expenses, car: this.meta.car || null,
+      carReminders: this.meta.carReminders || null,
     };
   }
 
@@ -327,6 +328,7 @@ export class Store {
       for (const e of data.expenses) await this.adapter.put('expenses', e);
     }
     if (data.car) await this.setMeta('car', data.car);
+    if (data.carReminders) await this.setMeta('carReminders', data.carReminders);
     return this.load();
   }
 }

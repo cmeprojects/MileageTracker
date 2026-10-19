@@ -394,3 +394,15 @@ select { appearance: auto; }
 /* ---- Google Drive ---- */
 .gdrive { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 4px; }
 .gdrive h3 { font-size: .95rem; margin: 10px 0 6px; }
+
+/* ---- fuel ---- */
+#price-per-litre { opacity: .8; }
+#expense-summary .warn.small { margin: 6px 0; font-size: .85rem; }
+
+/* ---- reminders ---- */
+.sub-head { font-size: .95rem; margin: 14px 0 8px; }
+#reminder-status { margin: 0 0 12px; line-height: 1.6; }
+.car-nag { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.warn.overdue { background: color-mix(in srgb, var(--danger) 15%, var(--card)); color: var(--danger); }
+.fuel-line { border-top: 1px solid var(--line); padding: 6px 0; font-size: .92rem; }
+.fuel-line .k { display: block; color: var(--muted); font-size: .8rem; }

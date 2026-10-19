@@ -2,6 +2,7 @@
 // (share sheet: Save to Files, Mail, Drive…) or downloads it on a computer.
 import { COLUMNS, csvCell, fileBase, summaryLines, toCsv } from './logic.js';
 import { methodLines } from './methods.js';
+import { fuelLines } from './fuel.js';
 import {
   EXPENSE_COLUMNS, expenseReportCsvLines, expensesCsvLines, expensesInRange, expenseSummaryLines, receiptName,
 } from './expenses.js';
@@ -42,6 +43,14 @@ async function expenseXlsxBlob(report) {
   }
   ws.addRow([]);
   ws.addRow(['TOTAL EXPENSES', '', s.count, s.total]).font = { bold: true, size: 12 };
+  const fuel = fuelLines(report.expenses.fuel);
+  if (fuel.length) {
+    ws.addRow([]);
+    for (const [k, v] of fuel) {
+      const r = ws.addRow([k.trim(), v]);
+      if (k === 'Fuel') r.font = { bold: true, size: 12 };
+    }
+  }
   ws.getColumn(1).width = 30;
   ws.getColumn(2).width = 12;
   ws.getColumn(3).width = 8;
@@ -94,6 +103,8 @@ async function xlsxBlob(report) {
     s.addRow([]);
     s.addRow(['Expenses']).font = { bold: true, size: 12 };
     for (const line of expenseSummaryLines(report.expenses.summary)) s.addRow(line);
+    const fuel = fuelLines(report.expenses.fuel);
+    if (fuel.length) { s.addRow([]); for (const line of fuel) s.addRow(line); }
   }
 
   if (report.methods) {
@@ -221,6 +232,7 @@ export async function taxPack(store, fyReport, logbook) {
     '',
     'EXPENSES',
     ...(x ? expenseSummaryLines(x).map(([k, v]) => `${k}: ${v}`) : ['No expenses']),
+    ...fuelLines(fyReport.expenses?.fuel).map(([k, v]) => `${k}${v ? `: ${v}` : ''}`),
     '',
     'LOGBOOK vs CENTS PER KM',
     ...(fyReport.methods ? methodLines(fyReport.methods, fyReport.methods.source).map(([k, v]) => `${k}${v ? `: ${v}` : ''}`) : []),

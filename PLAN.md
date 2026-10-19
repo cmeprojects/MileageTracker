@@ -1,88 +1,31 @@
-# Mileage Logbook — Plan
+# Design notes
 
-## Goal
+## Why a web app with no server
+- It needs to work on my phone in the car, often with poor signal, so data is stored on the
+  device (IndexedDB) and the app files are cached by a service worker.
+- No server means nothing to pay for or maintain. GitHub Pages hosts the static files.
+- The catch: a web page can't run in the background. Reports and backups are done at midnight /
+  10pm if the app is open, otherwise the next time it's opened, and anything missed is caught up.
 
-A phone-first app to log every trip (personal or business) with start/end
-odometer, purpose and time, stored in a database, with logbook files
-generated automatically every week, month and quarter.
+## Data
+- trips: start/end time, start/end odometer, distance, category (personal/business), type
+  (personal travel, home, work, ABN, TFN), client, between-clients from/to, notes.
+- expenses: date, amount, category, supplier, odometer, litres, full tank, receipt photo id.
+- photos: compressed JPEGs, stored separately from expenses.
+- reports: snapshot of the rows and totals at the time the report was made.
+- meta: settings (car details, reminders, logbook in progress, Google client ID, backup times).
 
-## Platform choice: phone-only installable web app (PWA)
+## Tax rules it follows
+- ATO logbook: 12 continuous weeks, valid for 5 years. Business-use % = business km / total km by
+  odometer (unlogged km count as private).
+- Car-related costs are split by business-use %, then ABN/TFN by business km.
+- Cents per km: business km capped at 5,000 per car, at the rate for the year (entered manually).
+- Tolls and parking are shown separately because they're claimed on top under either method.
 
-Chosen by the user: **no server**. The app is a static web page hosted free on
-GitHub Pages and added to the phone's home screen.
+These are estimates to take to an accountant, not tax advice.
 
-- **Data:** stored on the phone (IndexedDB). The app asks the browser to keep
-  it permanently. Backup/restore uses a JSON file.
-- **Offline:** a service worker stores every app file, so it opens and saves
-  trips with no signal.
-- **Reports:** a phone can't run a job at exactly 12 AM when the app is
-  closed. Reports are created at midnight if the app is open, otherwise the
-  first time it's opened after the period ends. Every missed period is caught
-  up. Files are made on the phone (Excel via ExcelJS, CSV) and shared through
-  the share sheet.
-- **Time zone:** the phone's own (Australia/Melbourne).
-
-## Features
-
-### Trip entry
-- **Two ways to log**
-  - *Start trip / End trip*: tap Start when you leave (time + start odo filled
-    in), tap End when you arrive (enter end odo, time filled in).
-  - *Log a completed trip*: enter everything at once after the fact.
-- **Start odometer automation:** pre-filled with the end odometer of the last
-  trip. A toggle switches it to manual entry. The app warns if the start odo
-  is lower than the last end odo, or if there is a gap (unlogged km).
-- **Auto-compute:** type the end odo and the total is computed, or (with
-  auto-compute on) type the total distance and the end odo is computed.
-- **Classification**
-  - Personal → *Personal travel* · *Travel to home* · *Travel to work*
-  - Business → *TFN* or *ABN*, plus **purpose / client name**, plus a
-    **"Between clients"** switch with *From client* and *To client*.
-- Date and time for start and end (defaults to now, editable).
-
-### History
-- List of trips grouped by date with totals; tap to edit or delete.
-- Totals for the current week / month / quarter on the home screen.
-
-### Reports (automatic files)
-| Report | Due from | Covers |
-|---|---|---|
-| Weekly | Monday 12:00 AM | Previous Monday–Sunday |
-| Monthly | 1st of the month 12:00 AM | Previous calendar month |
-| Quarterly | 1 Jan / 1 Apr / 1 Jul / 1 Oct 12:00 AM | Previous quarter (also labelled with the Australian financial-year quarter) |
-
-- Created at that time if the app is open, otherwise the next time it's opened.
-- Listed in the Reports tab. Each one can be saved or shared as **Excel (.xlsx)** or **CSV**.
-- Columns: date, start time, end time, category, type (personal type or
-  TFN/ABN), purpose/client, between-clients route, start odo, end odo,
-  distance.
-- Summary: total, business, personal, business-use %, TFN vs ABN totals.
-- **Catch-up:** every period that ended while the app was closed gets its
-  report. Periods with no trips are skipped. Each report is made only once.
-- Any custom date range can also be exported on demand.
-
-### Backup
-- Save a backup file (to Files / iCloud Drive / Google Drive / email) and
-  restore it on a new phone. A reminder appears after 2 weeks without one.
-
-## Data model (IndexedDB on the phone)
-
-```
-trips    id, start_at, end_at, start_odo, end_odo, distance, category,
-         trip_type, purpose, between_clients, from_client, to_client, notes,
-         start_odo_manual, created_at, updated_at
-reports  id, period_type, period_start, period_end, label, title,
-         rows (snapshot), summary, generated_at
-meta     lastBackupAt
-```
-
-## Build phases
-
-1. **Initial version (now):** phone-only. Trip entry with auto start-odo and
-   auto-compute, history with edit/delete, catch-up reports (CSV/XLSX),
-   date-range export, backup/restore, works offline, tests.
-2. **Next, based on real use:** multiple vehicles (each with its own odometer
-   chain), automatic cloud backup, GPS-assisted distance check, photo of the
-   odometer.
-3. **Later:** client address book with autocomplete, recurring routes,
-   charts, cloud backup of the database.
+## Ideas for later
+- Multiple vehicles.
+- GPS distance tracking while the app is open.
+- Reading receipts automatically.
+- Mirror the data to a Google Sheet.

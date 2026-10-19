@@ -5,10 +5,11 @@
 // between ABN and TFN by business km. Expenses not related to the car (clothing, laundry,
 // or an "Other" item marked not car-related) are listed with their totals but not split.
 import { ValidationError, round1 } from './logic.js';
+import { fuelLines, fuelStats } from './fuel.js';
 
 // group sets the colour and the History filter; car marks expenses that are split by mileage.
 export const EXPENSE_CATEGORIES = [
-  { key: 'fuel', label: 'Petrol', group: 'car', car: true },
+  { key: 'fuel', label: 'Petrol', group: 'car', car: true, odometer: true },
   { key: 'service', label: 'Service', group: 'car', car: true, odometer: true },
   { key: 'repairs', label: 'Repairs', group: 'car', car: true, odometer: true },
   { key: 'parts', label: 'Parts', group: 'car', car: true, odometer: true },
@@ -40,6 +41,13 @@ export const isCarRelated = (e) => (e.category === 'other' ? e.car_related !== f
 const round2 = (n) => Math.round(n * 100) / 100;
 const text = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
+function positiveOrNull(v, field) {
+  if (v === '' || v === null || v === undefined) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) throw new ValidationError(`${field} must be a positive number`);
+  return round2(n);
+}
+
 export function normaliseExpense(input) {
   const amount = Number(input.amount);
   if (!Number.isFinite(amount) || amount <= 0) throw new ValidationError('Enter the amount');
@@ -59,6 +67,9 @@ export function normaliseExpense(input) {
     supplier: text(input.supplier),
     notes: text(input.notes),
     odometer: odo === null ? null : round1(odo),
+    // Petrol only: litres and whether the tank was filled up (for fuel economy).
+    litres: cat.key === 'fuel' ? positiveOrNull(input.litres, 'Litres') : null,
+    full_tank: cat.key === 'fuel' ? input.full_tank !== false : null,
     photo_id: input.photo_id ?? null,
   };
 }
@@ -119,6 +130,7 @@ export function expenseRows(expenses) {
     supplier: e.supplier,
     amount: e.amount,
     odometer: e.odometer ?? '',
+    litres: e.litres ?? '',
     receipt: e.photo_id ? receiptName(e) : '',
     notes: e.notes,
   }));
@@ -126,7 +138,7 @@ export function expenseRows(expenses) {
 
 export const EXPENSE_COLUMNS = [
   ['date', 'Date'], ['category', 'Category'], ['car_related', 'Car-related'], ['supplier', 'Supplier'], ['amount', 'Amount ($)'],
-  ['odometer', 'Odometer'], ['receipt', 'Receipt photo'], ['notes', 'Notes'],
+  ['odometer', 'Odometer'], ['litres', 'Litres'], ['receipt', 'Receipt photo'], ['notes', 'Notes'],
 ];
 
 const money = (n) => `$${n.toFixed(2)}`;
@@ -213,7 +225,11 @@ export function attachExpenses(report, expenses, logbook = null) {
   const abnShare = s.business ? s.abnPercent : logbook?.summary.business ? logbook.summary.abnPercent : 0;
   const summary = summariseExpenses(list, { businessUse, abnShare });
   summary.businessUseSource = source;
-  report.expenses = { rows: expenseRows(list), summary };
+  report.expenses = {
+    rows: expenseRows(list),
+    summary,
+    fuel: fuelStats(expenses, report.period_start, report.period_end, { kmDriven: s.total, carCosts: summary.carTotal }),
+  };
 }
 
 /** CSV lines for a report's expenses (appended after the mileage section). */
@@ -222,7 +238,9 @@ export function expensesCsvLines(report, csvCell) {
   const lines = ['', 'Expenses', EXPENSE_COLUMNS.map(([, h]) => csvCell(h)).join(',')];
   for (const r of report.expenses.rows) lines.push(EXPENSE_COLUMNS.map(([k]) => csvCell(r[k])).join(','));
   lines.push('', 'Expenses summary');
-  for (const [k, v] of expenseSummaryLines(report.expenses.summary)) lines.push(`${csvCell(k)},${csvCell(v)}`);
+  for (const [k, v] of [...expenseSummaryLines(report.expenses.summary), ...fuelLines(report.expenses.fuel)]) {
+    lines.push(`${csvCell(k)},${csvCell(v)}`);
+  }
   return lines;
 }
 
@@ -257,5 +275,7 @@ export function expenseReportCsvLines(report, csvCell) {
     lines.push(row('Total not car-related', '', s.nonCarTotal.toFixed(2)));
   }
   lines.push('', row('Total expenses', '', s.total.toFixed(2)));
+  const fuel = fuelLines(report.expenses.fuel);
+  if (fuel.length) lines.push('', ...fuel.map(([k, v]) => row(k.trim(), v)));
   return lines;
 }

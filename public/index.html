@@ -23,6 +23,7 @@
     <section id="view-log" class="view">
       <div id="backup-nag"></div>
       <div id="logbook-nag"></div>
+      <div id="car-nag"></div>
       <div id="odo-check"></div>
       <div id="active-trip"></div>
       <div id="new-trip"></div>
@@ -166,6 +167,16 @@
             <label>Engine capacity<input name="engine" placeholder="e.g. 2.5L" autocomplete="off"></label>
             <label>Registration<input name="rego" placeholder="e.g. ABC123" autocomplete="off"></label>
           </div>
+          <h3 class="sub-head">Reminders</h3>
+          <div class="row">
+            <label>Service every (km)<input name="serviceKm" type="number" inputmode="numeric" min="0" placeholder="10000"></label>
+            <label>or every (months)<input name="serviceMonths" type="number" inputmode="numeric" min="0" placeholder="12"></label>
+          </div>
+          <div class="row dt">
+            <label>Rego due<input name="regoDue" type="date"></label>
+            <label>Insurance renews<input name="insuranceDue" type="date"></label>
+          </div>
+          <div class="muted small" id="reminder-status"></div>
           <button class="btn primary" type="submit">Save car details</button>
         </form>
       </details>
@@ -261,7 +272,12 @@
         </label>
       </div>
       <div class="chips" id="supplier-chips"></div>
-      <label id="odo-row" class="hidden">Odometer (optional)<input name="odometer" type="number" inputmode="decimal" step="0.1" min="0"></label>
+      <div class="row hidden" id="fuel-row">
+        <label>Litres<input name="litres" type="number" inputmode="decimal" step="0.01" min="0" placeholder="e.g. 42.5"></label>
+        <label>Price per litre<input id="price-per-litre" readonly tabindex="-1" placeholder="—"></label>
+      </div>
+      <label class="switch hidden" id="full-tank-row">Filled the tank up <input type="checkbox" name="full_tank" checked></label>
+      <label id="odo-row" class="hidden">Odometer<input name="odometer" type="number" inputmode="decimal" step="0.1" min="0"></label>
       <label>Notes (optional)<textarea name="notes" rows="2"></textarea></label>
       <p class="error" id="expense-error"></p>
       <button class="btn primary huge" type="submit" id="expense-save">Save expense</button>

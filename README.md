@@ -1,124 +1,79 @@
-# Mileage Logbook
+# Mileage Tracker
 
-A mileage logbook for your phone. Log business and personal trips and get weekly,
-monthly and quarterly reports in Excel and CSV.
+A mileage logbook and car expense tracker for my phone. I use it to log business and personal
+trips, keep receipts, and produce the records I need at tax time (ATO logbook, ABN/TFN split).
 
-**Everything is stored on your phone.** There is no server and no account.
-The app is just a web page (hosted free on GitHub Pages) that you add to your
-home screen. After the first visit it works with no signal.
+App: https://cmeprojects.github.io/MileageTracker/
 
-## Open it
+It's a plain web app with no server and no account. All data stays on the device. Add it to the
+home screen and it works like a normal app, including offline.
 
-**https://cmeprojects.github.io/MileageTracker/**
+- iPhone (Safari or Chrome): Share > Add to Home Screen. Use that icon from then on. iPhone keeps
+  each home-screen app's data separate from the browser.
+- Android (Chrome): menu > Install app.
 
-- **iPhone (Safari or Chrome):** tap Share → *Add to Home Screen*. Always open
-  it from that icon. iPhone keeps home-screen apps' data separately from the
-  browser.
-- **Android (Chrome):** menu ⋮ → *Install app* / *Add to Home screen*.
+## What it does
 
-## Features
-
-### Log (mileage)
-- **Start a trip with one tap:** Business ABN, Business TFN, To work, To home or
-  Personal. The time and start odometer are filled in for you.
-- **Finish with one number:** the end odometer or the trip distance.
-  *Same as last time* suggests the usual distance for that route.
-- **Clients:** tap a recent client or type one. Driving straight from one
-  client to the next is marked *between clients* automatically, with ABN/TFN
-  shown at both ends in reports.
-- **Reminders:** "still driving?" if a trip has been open for 3+ hours, and a
-  **weekly odometer check** that finds unlogged km and can log them as personal.
-- **Breakdown** for the week, month, quarter or financial year: business vs
-  personal %, and ABN vs TFN % of business.
-
-### App icon shortcuts (Android)
-Long-press the app icon for **Start ABN trip**, **Start TFN trip**, **Add
-expense**, **To home** and **To work**.
+### Trips
+- One tap to start a trip: Business ABN, Business TFN, To work, To home or Personal. Time and start
+  odometer are filled in automatically.
+- Finish by entering the end odometer or the distance. For routes I've driven before it offers the
+  usual distance.
+- Business trips record the client. Driving straight from one client to the next is marked as
+  "between clients", with ABN/TFN shown at both ends.
+- Warns if a trip has been left running for 3+ hours, and asks for an odometer check once a week
+  so missed km get picked up.
+- Breakdown by week, month, quarter or financial year: business vs personal %, and ABN vs TFN.
 
 ### Expenses
-- Amount, category, supplier (recent suppliers suggested; for **Petrol** a
-  dropdown of Australian fuel brands plus *Other / independent…*), optional odometer
-  and a **receipt photo**. Photos are shrunk to about 150–350 KB and stay
-  readable.
-- Categories: petrol, service, repairs, parts, tyres, car wash, registration,
-  insurance, tolls & parking, clothing/uniform, laundry, plus **Other…** for
-  anything else. Names you type are remembered as quick buttons.
-- **Car-related expenses** (car costs, tolls & parking, and "Other" items
-  marked car-related) are split by your mileage: business-use % (from the ATO
-  logbook, or your trips until you have one), then ABN vs TFN by business km.
-  The rest is **Personal**.
-- **Not car-related** expenses (clothing, laundry, "Other" items switched off)
-  are listed with their totals but **not split**.
+- Amount, category, supplier, odometer and a receipt photo (compressed to a few hundred KB).
+- Petrol has a list of Australian fuel brands, plus litres and a full-tank switch for fuel
+  economy (L/100 km), price per litre and cost per km. It flags fuel use that is higher than
+  usual, or a fill-up that looks missed.
+- Categories: petrol, service, repairs, parts, tyres, car wash, rego, insurance, tolls & parking,
+  clothing, laundry, and custom ones.
+- Car-related costs are split by mileage into Personal / ABN / TFN. Other costs are listed but not
+  split.
 
-### History
-- Separate **Mileage** and **Expenses** histories, each with search and filters.
-- Swipe left to delete (with Undo). Swipe a trip right to **repeat** it.
-  Tap to edit.
-- **Clear all**, with an offer to back up first.
+### Reminders
+- Service due by km or months (default 10,000 km / 12 months), worked out from the last service.
+- Rego and insurance renewals. Paying one rolls the reminder on a year.
 
-### Reports
-- Weekly, monthly, quarterly and **financial-year** reports are created
-  automatically when each period ends.
-- Each report (Excel + CSV) includes:
-  - trips, odometer start/end, car details
-  - business/personal and ABN/TFN percentages
-  - an **Expenses** sheet with claimable estimates
-  - a **Receipts** zip of that period's photos
-- **Expense report** for any date range:
-  - totals by category with % of total
-  - every expense
-  - at the end, the split of the **car-related** expenses into
-    **Personal / ABN / TFN** (% and $), based on your mileage
-  - then the not-car-related total (not split) and the overall total
-- **ATO 12-week logbook** with business-use %. The app guides you through it:
-  - a progress strip on the Log tab ("day 34 of 84")
-  - a reminder to finalise it after 12 weeks
-  - a reminder before its 5-year validity ends
-  - a prompt to start a new one if your business use changes by more than
-    10 points
-- **Which method claims more?** Compares the logbook method ((car costs +
-  depreciation) × business-use %) with cents per km (business km up to 5,000 ×
-  the ATO rate you enter) for a financial year, split ABN/TFN. Also included in
-  the financial-year Excel file and the tax pack.
-- **Tax pack:** one zip per financial year with the workbook, the logbook, a
-  summary and all receipt photos, ready for your accountant.
-- **Clients:** rename or merge names, for example "ACME" → "Acme Pty Ltd".
+### Reports (Excel and CSV)
+- Weekly, monthly, quarterly and financial-year reports, created automatically after each period.
+- Expense report for any date range: totals by category, every expense, the Personal/ABN/TFN
+  split of car costs, and fuel figures.
+- ATO 12-week logbook, with progress on the home screen and reminders to finalise it, renew it
+  after 5 years, or redo it if business use changes a lot.
+- Logbook vs cents-per-km comparison for a financial year.
+- Tax pack: one zip per financial year with the workbook, logbook, summary and receipt photos.
+- Rename or merge client names.
 
 ### Backup
-- Each night at 10pm (or the next time you open the app), a copy is kept
-  inside the app. *Go back to last night's copy* undoes mistakes.
-- A one-tap reminder saves **mileage-backup.zip** (trips, expenses and photos).
-  Choose *Replace* to keep one up-to-date file. *Restore backup* loads it on
-  a new phone.
-- **Google Drive backup** (optional): after a one-time setup
-  ([docs/google-drive-setup.md](docs/google-drive-setup.md)), backups go to
-  *My Drive / Mileage Logbook backups / mileage-backup.zip*:
-  - automatically if you signed in within the last hour, otherwise with one tap
-  - each backup replaces the last
-  - *Restore from Drive* on a new device
+- A copy is kept inside the app every night, and there's a reminder to save `mileage-backup.zip`
+  (trips, expenses and photos) somewhere safe.
+- Optional Google Drive backup: see [docs/google-drive-setup.md](docs/google-drive-setup.md). It
+  uploads to "Mileage Logbook backups" in Drive and only has access to its own file.
 
-  The app only gets access to files it creates.
+Data only lives on the device, so deleting the app or clearing browser data deletes it too. Keep
+backups.
 
-> ⚠️ Because data lives only on the phone, deleting the app, clearing Safari or
-> Chrome website data, or losing the phone deletes your trips. Back up regularly.
+## Shortcuts (Android)
+Long-press the app icon for Start ABN trip, Start TFN trip, Add expense, To home and To work.
 
-## Publishing (one-time setup)
-
-1. On GitHub: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. **Actions → "Publish app to GitHub Pages" → Run workflow** (or push any change).
-
-Every push after that runs the tests and republishes the app. Phones get the new
-version the next time the app is opened twice.
+## Publishing
+GitHub Actions runs the tests and publishes `public/` to GitHub Pages on every push
+(Settings > Pages > Source: GitHub Actions). Phones pick up the new version after the app is
+reopened.
 
 ## Development
 
 ```bash
-npm install     # dev only: Excel library + tests
-npm start       # http://localhost:8080
+npm install
+npm start      # http://localhost:8080
 npm test
 ```
 
-The app is plain HTML/CSS/JS in `public/` with no build step. The logic in
-`public/js/` (`logic.js`, `periods.js`, `store.js`) is shared with the Node tests.
-
-
+Plain HTML, CSS and JavaScript in `public/`, no build step. The logic in `public/js/` is shared
+with the Node tests in `test/`. ExcelJS and JSZip are bundled in `public/vendor/` so it works
+offline.
